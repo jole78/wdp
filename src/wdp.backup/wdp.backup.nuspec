@@ -1,13 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
-        <id>wdp.backup</id>
+        <id>WDP.Backup</id>
         <title>Web Deploy PowerShell - backup</title>
         <version>$version$</version> <!-- The real version will be set via TeamCity and nuget.exe -->
         <iconUrl>https://raw.github.com/jole78/wdp/master/logo.png</iconUrl>
         <authors>Johan Leino</authors>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
-        <description>wdp is a set of PowerShell modules for performing web deploy PowerShell commands.</description>
+        <summary></summary>
+        <description>WDP is a set of PowerShell modules for performing web deploy PowerShell commands.</description>
         <projectUrl>http://github.com/jole78/wdp</projectUrl>
         <tags>WebDeploy MSDeploy IIS Automation PowerShell</tags>
     </metadata>
