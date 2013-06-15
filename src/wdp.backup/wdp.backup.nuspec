@@ -4,7 +4,7 @@
         <id>wdp.backup</id>
         <title>Web Deploy PowerShell - backup</title>
         <version>$version$</version> <!-- The real version will be set via TeamCity and nuget.exe -->
-        <iconUrl>https://raw.github.com/jole78/wdp/master/logo-32.png</iconUrl>
+        <iconUrl>https://raw.github.com/jole78/wdp/master/logo.png</iconUrl>
         <authors>Johan Leino</authors>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>wdp is a set of PowerShell modules for performing web deploy PowerShell commands.</description>

@@ -5,17 +5,21 @@
 		EnsureWDPowerShellMode
 		
 		Write-Host " - Executing a backup of site '$site'"
-		$parameters = BuildParameters $site 
-		$result = Backup-WDApp @parameters -ErrorAction:Stop
-		PublishArtifacts $result.Package
+		
+		foreach($file in $cfg.SourcePublishSettingsFiles) {
+			Write-Host "   - for '$file'"
+			$parameters = BuildParameters $site $file
+			$backup = Backup-WDApp @parameters -ErrorAction:Stop
+			
+			PublishArtifacts $backup.Package
+			$backup | Out-String
+		}	
 			
 	} catch {
 		Write-Error $_.Exception
 		exit 1
-	}
-	
-	Write-Host "---- Summary ----"
-	$result | Out-String	
+	}	
+
 }
 
 function Set-Properties {
@@ -54,18 +58,21 @@ function EnsureWDPowerShellMode {
 }
 
 function BuildParameters {
-	param([string]$name)
+	param(
+		[string]$application, 
+		[string]$sourcePublishSettings
+	)
 	
 	$parameters = @{
-		Application = $name
+		Application = $application
 	}
 	
-	if($cfg.PathToSourcePublishSettingsFile) {
-		$parameters.SourcePublishSettings = $cfg.PathToSourcePublishSettingsFile
+	if($sourcePublishSettings) {
+		$parameters.SourcePublishSettings = $sourcePublishSettings
 	}
 	
-	if($cfg.PathToBackupLocation) {
-		$parameters.Output = $cfg.PathToBackupLocation
+	if($cfg.BackupLocation) {
+		$parameters.Output = $cfg.BackupLocation
 	}
 	
 	return $parameters
@@ -77,8 +84,8 @@ function BuildParameters {
 # default values
 # override by Set-Properties @{Key=Value} outside of this script
 $cfg = @{
-	PathToSourcePublishSettingsFile = $null #null implies local backup
-	PathToBackupLocation = (Get-Location).Path + "\Backups"
+	SourcePublishSettingsFiles = @($null) # empty implies local backup
+	BackupLocation = (Get-Location).Path + "\Backups" # .\Backups
 	PublishArtifacts = if($Env:TEAMCITY_DATA_PATH){$true} else {$false}
 }
 
