@@ -7,8 +7,8 @@
         <iconUrl>https://raw.github.com/jole78/wdp/master/logo.png</iconUrl>
         <authors>Johan Leino</authors>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
-        <summary></summary>
-        <description>WDP is a set of PowerShell modules for performing web deploy PowerShell commands.</description>
+        <summary>Perform web deploy backups via PowerShell.</summary>
+        <description>Web Deploy PowerShell (wdp) is a set of PowerShell modules for performing web deploy PowerShell commands. Get more details at project site.</description>
         <projectUrl>http://github.com/jole78/wdp</projectUrl>
         <tags>WebDeploy MSDeploy IIS Automation PowerShell</tags>
     </metadata>
