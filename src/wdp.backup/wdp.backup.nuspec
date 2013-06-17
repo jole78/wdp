@@ -8,8 +8,8 @@
         <authors>Johan Leino</authors>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <summary>Perform web deploy backups via PowerShell.</summary>
-        <description>Web Deploy PowerShell (wdp) is a set of PowerShell modules for performing web deploy PowerShell commands. Get more details at project site.</description>
-        <projectUrl>http://github.com/jole78/wdp</projectUrl>
+        <description>Web Deploy PowerShell (wdp) is a set of PowerShell modules for performing web deploy PowerShell commands. This is the backup module. Get more details at the project site.</description>
+        <projectUrl>https://github.com/jole78/wdp/wiki/The-Backup-Module</projectUrl>
         <tags>WebDeploy MSDeploy IIS Automation PowerShell</tags>
     </metadata>
     <files>

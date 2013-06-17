@@ -9,7 +9,7 @@
 		foreach($file in $cfg.SourcePublishSettingsFiles) {
 			Write-Host "   - for '$file'"
 			$parameters = BuildParameters $site $file
-			$backup = Backup-WDApp @parameters -ErrorAction:Stop
+			$backup = Backup-WDApp @parameters -ErrorAction:Stop 
 			
 			PublishArtifacts $backup.Package
 			$backup | Out-String
@@ -75,6 +75,10 @@ function BuildParameters {
 		$parameters.Output = $cfg.BackupLocation
 	}
 	
+	if($cfg.ProviderSettings) {
+		$parameters.SourceSettings = $cfg.ProviderSettings
+	}
+	
 	return $parameters
 
 }
@@ -87,6 +91,7 @@ $cfg = @{
 	SourcePublishSettingsFiles = @($null) # empty implies local backup
 	BackupLocation = (Get-Location).Path + "\Backups" # .\Backups
 	PublishArtifacts = if($Env:TEAMCITY_DATA_PATH){$true} else {$false}
+	ProviderSettings = $null
 }
 
 Export-ModuleMember -Function Invoke-Backup, Set-Properties
