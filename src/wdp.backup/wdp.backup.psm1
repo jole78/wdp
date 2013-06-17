@@ -9,7 +9,7 @@
 		foreach($file in $cfg.SourcePublishSettingsFiles) {
 			Write-Host "   - for '$file'"
 			$parameters = BuildParameters $site $file
-			$backup = Backup-WDApp @parameters -ErrorAction:Stop 
+			$backup = Backup-WDApp @parameters -ErrorAction:Stop
 			
 			PublishArtifacts $backup.Package
 			$backup | Out-String
@@ -79,6 +79,14 @@ function BuildParameters {
 		$parameters.SourceSettings = $cfg.ProviderSettings
 	}
 	
+	if($cfg.SkipFolderList) {
+		$parameters.SkipFolderList = @($cfg.SkipFolderList)
+	}
+	
+	if($cfg.SkipFileList) {
+		$parameters.SkipFileList = @($cfg.SkipFileList)
+	}
+	
 	return $parameters
 
 }
@@ -92,6 +100,8 @@ $cfg = @{
 	BackupLocation = (Get-Location).Path + "\Backups" # .\Backups
 	PublishArtifacts = if($Env:TEAMCITY_DATA_PATH){$true} else {$false}
 	ProviderSettings = $null
+	SkipFolderList = $null
+	SkipFileList = $null
 }
 
 Export-ModuleMember -Function Invoke-Backup, Set-Properties
