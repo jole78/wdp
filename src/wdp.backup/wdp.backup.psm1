@@ -4,11 +4,17 @@
 	try {
 		EnsureWDPowerShellMode
 		
-		Write-Host " - Executing a backup of site '$site'"
+		Write-Host " - Executing a content backup"
 		
 		foreach($file in $cfg.SourcePublishSettingsFiles) {
-			Write-Host "   - for '$file'"
+		
 			$parameters = BuildParameters $site $file
+			if($parameters.Application) {
+				Write-Host "   - for '$($parameters.Application)'"
+			}
+			#TODO: need to extract this info from the .publishsettings. Via Get-WDPublishSettings perhaps.
+			
+			
 			$backup = Backup-WDApp @parameters -ErrorAction:Stop
 			
 			PublishArtifacts $backup.Package
