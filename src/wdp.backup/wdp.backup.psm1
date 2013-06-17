@@ -9,11 +9,7 @@
 		foreach($file in $cfg.SourcePublishSettingsFiles) {
 		
 			$parameters = BuildParameters $site $file
-			if($parameters.Application) {
-				Write-Host "   - for '$($parameters.Application)'"
-			}
-			#TODO: need to extract this info from the .publishsettings. Via Get-WDPublishSettings perhaps.
-			
+			WriteInfoMessage $parameters	
 			
 			$backup = Backup-WDApp @parameters -ErrorAction:Stop
 			
@@ -26,6 +22,31 @@
 		exit 1
 	}	
 
+}
+
+function WriteInfoMessage($parameters){
+	$ApplicationNameViaFile = $true
+	if($parameters.Application) {
+		Write-Host "   - for '$($parameters.Application)'"
+		$ApplicationNameViaFile = $false
+	}
+	
+	if($parameters.SourcePublishSettings) {
+				
+		$publishsettings = Get-WDPublishSettings $parameters.SourcePublishSettings
+				
+		if($ApplicationNameViaFile){
+			if($publishsettings.MSDeploySite) {
+				Write-Host "   - for '$($publishsettings.MSDeploySite)'"
+			} else {
+				throw "you need to specify the IIS application in either the .publishsettings file or via parameter"
+			}
+		}
+	
+		if($publishsettings.PublishUrl) {
+			Write-Host "   - on '$($publishsettings.PublishUrl)'"
+		}
+	}
 }
 
 function Set-Properties {
@@ -72,7 +93,7 @@ function BuildParameters {
 	$parameters = @{}
 	
 	if($application) {
-		Application = $application
+		$parameters.Application = $application
 	} else {
 		if($sourcePublishSettings -eq $null) {
 			throw "if you don't add the IIS application name you need to add it via a .publishsettings file"
