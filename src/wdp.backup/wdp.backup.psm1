@@ -1,5 +1,5 @@
 ﻿function Invoke-Backup {
-	param([string]$site = $(throw '- Need IIS site name'))
+	param([string]$site)
 	
 	try {
 		EnsureWDPowerShellMode
@@ -63,8 +63,14 @@ function BuildParameters {
 		[string]$sourcePublishSettings
 	)
 	
-	$parameters = @{
+	$parameters = @{}
+	
+	if($application) {
 		Application = $application
+	} else {
+		if($sourcePublishSettings -eq $null) {
+			throw "if you don't add the IIS application name you need to add it via a .publishsettings file"
+		}
 	}
 	
 	if($sourcePublishSettings) {
