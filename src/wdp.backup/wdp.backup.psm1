@@ -36,8 +36,8 @@ function WriteInfoMessage($parameters){
 		$publishsettings = Get-WDPublishSettings $parameters.SourcePublishSettings
 				
 		if($ApplicationNameViaFile){
-			if($publishsettings.MSDeploySite) {
-				Write-Host "   - for '$($publishsettings.MSDeploySite)'"
+			if($publishsettings.SiteName) {
+				Write-Host "   - for '$($publishsettings.SiteName)'"
 			} else {
 				throw "you need to specify the IIS application in either the .publishsettings file or via parameter"
 			}
