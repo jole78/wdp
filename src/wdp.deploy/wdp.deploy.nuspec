@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>WDP.Deploy</id>
+        <title>Web Deploy PowerShell - deploying</title>
+        <version>$version$</version> <!-- The real version will be set via TeamCity and nuget.exe -->
+        <iconUrl>https://raw.github.com/jole78/wdp/master/logo.png</iconUrl>
+        <authors>Johan Leino</authors>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>Perform web deploy deployments via PowerShell. Get more details at the project site.</description>
+        <projectUrl>https://github.com/jole78/wdp/wiki/WDP.Deploy-Introduction</projectUrl>
+        <tags>WebDeploy MSDeploy IIS Automation PowerShell</tags>
+    </metadata>
+    <files>
+        <file src="wdp.deploy.psm1" target="wdp.deploy.psm1" />
+    </files>
+</package>
