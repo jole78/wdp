@@ -1,25 +1,129 @@
-﻿param 
-(
-    [string]$PathToPackage = $(throw '- Need path to package'),
-	[string]$PathToParamsFile = $(throw '- Need path to parameters file'),
-	[string]$SitePath = $(throw '- Need IIS site name'),
-	[string]$PathToPrimaryServerPublishSettingsFile = $(throw '- Need path to .PublishSettings file for primary WFE server'),
-	[string]$PathToSecondaryServerPublishSettingsFile = $(throw '- Need path to .PublishSettings file for secondary WFE server')
-)
-
-
-function Configure-ExecutionContext {
-	if($Env:TEAMCITY_DATA_PATH) {
-		$Script:OnDeploymentStarting = [System.Action] { Write-Host "##teamcity[progressStart 'deployment in progress...']" }
-		$Script:OnDeploymentFinished = [System.Action] { Write-Host "##teamcity[progressFinish 'deployment in progress...']" }
-	} else {
-		$Script:OnDeploymentStarting = [System.Action] { Write-Host "deployment started" }
-		$Script:OnDeploymentFinished = [System.Action] { Write-Host "deployment finished successfully" }
-	}
-}
+﻿function Invoke-Deploy {
+	param(
+		[string]$PathToPackage = $(throw '- Need path to package')
+	)
 	
+	try {
+		EnsureWDPowerShellMode
+		
+		Write-Host " - Executing a deployment"
+		
+		#Write-Host " - Syncing package '$PathToPackage' with parameter file '$PathToParamsFile'..." -NoNewline
+		
+		$primary = $cfg.DestinationPublishSettingsFiles | Select-Object -First 1
+		$restoreParams = BuildRestoreParameters $PathToPackage $primary
+		$restore = Restore-WDPackage @restoreParams -ErrorAction:Stop
+		
+		$restore | Out-String
+		
+		$cfg.DestinationPublishSettingsFiles | Select-Object -Skip 1 | %{
+			$syncParams = BuildSyncParameters $primary $_
+			$sync = Sync-WDApp @syncParams -ErrorAction:Stop
+			
+			$sync | Out-String
+		}
+			
+	} catch {
+		Write-Error $_.Exception
+		exit 1
+	}	
 
-function Ensure-WDPowerShellMode {
+}
+
+function Set-Properties {
+	param(
+		[HashTable]$properties
+	)
+
+	foreach ($key in $properties.keys) {
+		$cfg[$key] = $properties.$key
+    }
+}
+
+function BuildSyncParameters{
+	param(
+		[string]$from,
+		[string]$to
+	)
+	
+	$parameters = @{}
+	
+	if(IsValidFile $from) {
+		$parameters.SourcePublishSettings = $from
+	}
+	
+	if(IsValidFile $to) {
+		$parameters.DestinationPublishSettings = $from
+	}
+	
+	# TODOs:
+	
+	# -SourceApp -DestinationApp
+	
+	#-DestinationSettings (Provider)
+	#-SourceSettings (Provider)
+	#-SkipLists??
+	
+	return $parameters
+	
+}
+
+function BuildRestoreParameters {
+	param(
+		[string]$package,
+		[string]$destinationPublishSettings
+	)
+	
+	$parameters = @{}
+	
+	if(IsValidFile $package){
+		$parameters.Package = $package
+	} else { throw "No Web Deploy package was found at '$package'. Invalid path." }
+	
+	if(IsValidFile $cfg.ParametersFile) {
+		$parameters.Parameters = Get-WDParameters $cfg.ParametersFile
+	}
+	
+	if(IsValidFile $destinationPublishSettings) {
+		$parameters.DestinationPublishSettings = $destinationPublishSettings
+	}
+	
+	if($cfg.ProviderSettings) {
+		$parameters.DestinationSettings = $cfg.ProviderSettings
+	}
+	
+	if($cfg.SkipFolderList) {
+		$parameters.SkipFolderList = @($cfg.SkipFolderList)
+	}
+	
+	if($cfg.SkipFileList) {
+		$parameters.SkipFileList = @($cfg.SkipFileList)
+	}
+	
+	return $parameters
+
+}
+
+function IsValidFile($file) {
+	if($file) {
+		return Test-Path -PathType:Leaf $file
+	}
+	
+	return $false
+}
+
+#
+#function Configure-ExecutionContext {
+#	if($Env:TEAMCITY_DATA_PATH) {
+#		$Script:OnDeploymentStarting = [System.Action] { Write-Host "##teamcity[progressStart 'deployment in progress...']" }
+#		$Script:OnDeploymentFinished = [System.Action] { Write-Host "##teamcity[progressFinish 'deployment in progress...']" }
+#	} else {
+#		$Script:OnDeploymentStarting = [System.Action] { Write-Host "deployment started" }
+#		$Script:OnDeploymentFinished = [System.Action] { Write-Host "deployment finished successfully" }
+#	}
+#}
+
+function EnsureWDPowerShellMode {
 	$WDPowerShellSnapin = Get-PSSnapin -Name WDeploySnapin3.0 -ErrorAction:SilentlyContinue
 	
 	if( $WDPowerShellSnapin -eq $null) {
@@ -38,73 +142,16 @@ function Ensure-WDPowerShellMode {
 	}
 }
 
-function Load-Parameters {
-	
-	Write-Host " - Loading web deploy parameters '$PathToParamsFile'..." -NoNewline
-	$WDParameters = Get-WDParameters -FilePath $PathToParamsFile -ErrorAction:SilentlyContinue -ErrorVariable e
-	
-	if($? -eq $false) {
-		throw " - Get-WDParameters failed: $e"
-	}
-	Write-Host "OK" -ForegroundColor Green
-	
-	return $WDParameters
+
+# default values
+# override by Set-Properties @{Key=Value} outside of this script
+$cfg = @{
+	DestinationPublishSettingsFiles = @($null) # empty implies local deploy
+	ProviderSettings = $null
+	SkipFolderList = $null
+	SkipFileList = $null
+	ParametersFile = $null	
 }
 
-function Deploy-WebPackage {
-	
-	$WDParameters = Load-Parameters	
+Export-ModuleMember -Function Invoke-Deploy, Set-Properties
 
-	try {
-		Write-Host " - Syncing package '$PathToPackage' with parameter file '$PathToParamsFile'..." -NoNewline
-		$Result = Restore-WDPackage -ErrorAction:Stop `
-			-Package $PathToPackage `
-			-Parameters $WDParameters `
-			-DestinationPublishSettings $PathToPrimaryServerPublishSettingsFile
-		} catch {
-			$exception = $_.Exception
-			Write-Host "ERROR" -ForegroundColor:Red
-			throw " - Restore-WDPackage failed: $exception"
-		}		
-	
-	Write-Host "OK" -ForegroundColor Green
-	Write-Host "Summary:"
-	$Result | Out-String
-}
-
-function Sync-Servers {
-	try {
-		Write-Host " - Syncing site '$SitePath' to other servers..." -NoNewline
-		$Result = Sync-WDApp -ErrorAction:Stop `
-			-SourcePublishSettings $PathToPrimaryServerPublishSettingsFile `
-			-DestinationPublishSettings $PathToSecondaryServerPublishSettingsFile `
-			-SourceApp $SitePath -DestinationApp $SitePath `
-			
-	} catch {
-		$exception = $_.Exception
-		Write-Host "ERROR" -ForegroundColor:Red
-		throw " - Restore-WDPackage failed: $exception"
-	}
-	
-	Write-Host "OK" -ForegroundColor Green
-	Write-Host "Summary:"
-	$Result | Out-String
-}
-
-
-try {
-	
-	Configure-ExecutionContext
-	
-	$OnDeploymentStarting.Invoke()
-	
-	Ensure-WDPowerShellMode
-	Deploy-WebPackage
-	Sync-Servers
-	
-	$OnDeploymentFinished.Invoke()
-	
-} catch {
-	Write-Error $_.Exception
-	exit 1
-}
