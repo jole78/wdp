@@ -36,7 +36,10 @@ function Set-Properties {
 	)
 
 	foreach ($key in $properties.keys) {
-		$cfg[$key] = $properties.$key
+		
+		$value = $properties.$key
+		Write-Host "Property Updated: $key - $value"
+		$cfg[$key] = $value
     }
 }
 
