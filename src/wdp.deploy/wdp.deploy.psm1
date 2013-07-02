@@ -6,10 +6,6 @@
 	try {
 		EnsureWDPowerShellMode
 		
-		Write-Host " - Executing a deployment"
-		
-		#Write-Host " - Syncing package '$PathToPackage' with parameter file '$PathToParamsFile'..." -NoNewline
-		
 		$primary = $cfg.DestinationPublishSettingsFiles | Select-Object -First 1
 		$restoreParams = BuildRestoreParameters $PathToPackage $primary
 		$restore = Restore-WDPackage @restoreParams -ErrorAction:Stop
@@ -38,7 +34,7 @@ function Set-Properties {
 	foreach ($key in $properties.keys) {
 		
 		$value = $properties.$key
-		Write-Host "Property Updated: $key - $value"
+		Write-Host "Property '$key' updated with value '$value'"
 		$cfg[$key] = $value
     }
 }
@@ -114,17 +110,6 @@ function IsValidFile($file) {
 	
 	return $false
 }
-
-#
-#function Configure-ExecutionContext {
-#	if($Env:TEAMCITY_DATA_PATH) {
-#		$Script:OnDeploymentStarting = [System.Action] { Write-Host "##teamcity[progressStart 'deployment in progress...']" }
-#		$Script:OnDeploymentFinished = [System.Action] { Write-Host "##teamcity[progressFinish 'deployment in progress...']" }
-#	} else {
-#		$Script:OnDeploymentStarting = [System.Action] { Write-Host "deployment started" }
-#		$Script:OnDeploymentFinished = [System.Action] { Write-Host "deployment finished successfully" }
-#	}
-#}
 
 function EnsureWDPowerShellMode {
 	$WDPowerShellSnapin = Get-PSSnapin -Name WDeploySnapin3.0 -ErrorAction:SilentlyContinue
