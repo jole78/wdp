@@ -8,6 +8,8 @@
 		
 		$primary = $cfg.DestinationPublishSettingsFiles | Select-Object -First 1
 		$restoreParams = BuildRestoreParameters $PathToPackage $primary
+		
+		OnDeploymentStarting
 		$restore = Restore-WDPackage @restoreParams -ErrorAction:Stop
 		
 		$restore | Out-String
@@ -18,6 +20,7 @@
 			
 			$sync | Out-String
 		}
+		OnDeploymentFinished
 			
 	} catch {
 		Write-Error $_.Exception
@@ -37,6 +40,18 @@ function Set-Properties {
 		Write-Host "Property '$key' updated with value '$value'"
 		$cfg[$key] = $value
     }
+}
+
+function OnDeploymentStarting{
+ 	if($cfg.ReportProgress) {
+		Write-Host $cfg.Messages.DeploymentStarting
+	}
+}
+
+function OnDeploymentFinished {
+	if($cfg.ReportProgress) {
+		Write-Host $cfg.Messages.DeploymentFinished
+	}
 }
 
 function BuildSyncParameters{
@@ -130,7 +145,7 @@ function EnsureWDPowerShellMode {
 	}
 }
 
-
+#$Env:TEAMCITY_DATA_PATH
 # default values
 # override by Set-Properties @{Key=Value} outside of this script
 $cfg = @{
@@ -138,7 +153,20 @@ $cfg = @{
 	ProviderSettings = $null
 	SkipFolderList = $null
 	SkipFileList = $null
-	ParametersFile = $null	
+	ParametersFile = $null
+	ReportProgress = $true
+	Messages = @{
+		DeploymentStarting = if($Env:TEAMCITY_DATA_PATH){
+			"##teamcity[progressStart 'deployment in progress...']"
+		} else {
+			"deployment in progress..."
+		}
+		DeploymentFinished = if($Env:TEAMCITY_DATA_PATH){
+			"##teamcity[progressFinish 'deployment in progress...']"
+		} else {
+			"deployment finished successfully"
+		}
+	}
 }
 
 Export-ModuleMember -Function Invoke-Deploy, Set-Properties
