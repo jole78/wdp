@@ -1,33 +1,31 @@
 ﻿function Invoke-Deploy {
 	param(
 		[string]$PathToPackage = $(throw '- Need path to package')
-	)
-	
-	OnDeploymentStarting	
+	)		
 	
 	try {
+		OnDeploymentStarting
+		
 		EnsureWDPowerShellMode
 		
 		$primary = $cfg.DestinationPublishSettingsFiles | Select-Object -First 1
-		$restoreParams = BuildRestoreParameters $PathToPackage $primary
-		
-		$restore = Restore-WDPackage @restoreParams -ErrorAction:Stop
-		
-		$restore | Out-String
-		
+		Deploy $PathToPackage $primary
+
 		$cfg.DestinationPublishSettingsFiles | Select-Object -Skip 1 | %{
-			$syncParams = BuildSyncParameters $primary $_
-			$sync = Sync-WDApp @syncParams -ErrorAction:Stop
 			
-			$sync | Out-String
-		}		
+			if($cfg.UseSync) {
+				Sync $primary $_
+			} else {
+				Deploy $PathToPackage $_
+			}
+		}
+		
+		OnDeploymentFinished
 			
 	} catch {
 		Write-Error $_.Exception
 		exit 1
-	}
-	
-	OnDeploymentFinished
+	}	
 
 }
 
@@ -44,14 +42,26 @@ function Set-Properties {
     }
 }
 
+function Deploy($package, $dest) {
+	$params = BuildRestoreParameters $package $dest		
+	$out = Restore-WDPackage @params -ErrorAction:Stop		
+	$out | Out-String	
+}
+
+function Sync($from, $to) {
+	$params = BuildSyncParameters $from $to
+	$out = Sync-WDApp @params -ErrorAction:Stop			
+	$out | Out-String
+}
+
 function OnDeploymentStarting{
- 	if($cfg.ReportProgress) {
+ 	if($cfg.ShowProgress) {
 		Write-Host $cfg.Messages.DeploymentStarting
 	}
 }
 
 function OnDeploymentFinished {
-	if($cfg.ReportProgress) {
+	if($cfg.ShowProgress) {
 		Write-Host $cfg.Messages.DeploymentFinished
 	}
 }
@@ -155,15 +165,16 @@ $cfg = @{
 	SkipFolderList = $null
 	SkipFileList = $null
 	ParametersFile = $null
-	ReportProgress = $true
+	UseSync = $true
+	ShowProgress = $true
 	Messages = @{
 		DeploymentStarting = if($Env:TEAMCITY_DATA_PATH){
-			"##teamcity[progressStart 'deploying']"
+			"##teamcity[progressStart 'Deploying']"
 		} else {
 			"deployment in progress..."
 		}
 		DeploymentFinished = if($Env:TEAMCITY_DATA_PATH){
-			"##teamcity[progressFinish 'deploying']"
+			"##teamcity[progressFinish 'Deploying']"
 		} else {
 			"deployment finished successfully"
 		}
