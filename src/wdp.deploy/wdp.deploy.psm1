@@ -60,7 +60,7 @@ function Sync($from, $to) {
 
 function Log([string]$message) {
 	if($cfg.ShowProgress) {
-		Write-Output $message
+		Write-Host $message
 	}
 }
 
@@ -69,8 +69,7 @@ function BuildSyncParameters{
 		[string]$from,
 		[string]$to
 	)
-	Log "Building Sync Parameters"
-	
+
 	$parameters = @{}
 	
 	if(IsValidFile $from) {
@@ -98,8 +97,6 @@ function BuildRestoreParameters {
 		[string]$package,
 		[string]$destinationPublishSettings
 	)
-	
-	Log "Building Restore Parameters"
 	
 	$parameters = @{}
 	
