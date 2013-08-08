@@ -45,13 +45,13 @@ function Set-Properties {
 function Deploy($package, $dest) {
 	$params = BuildRestoreParameters $package $dest		
 	$out = Restore-WDPackage @params -ErrorAction:Stop		
-	$out | Out-String	
+	$out | Out-Null	
 }
 
 function Sync($from, $to) {
 	$params = BuildSyncParameters $from $to
 	$out = Sync-WDApp @params -ErrorAction:Stop			
-	$out | Out-String
+	$out | Out-Null
 }
 
 function OnDeploymentStarting{
