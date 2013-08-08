@@ -3,8 +3,7 @@
 		[string]$PathToPackage = $(throw '- Need path to package')
 	)		
 	
-	try {
-		OnDeploymentStarting
+	try {	
 		
 		EnsureWDPowerShellMode
 		
@@ -181,4 +180,6 @@ if ($env:TEAMCITY_VERSION) {
 }
 
 Export-ModuleMember -Function Invoke-Deploy, Set-Properties
+
+OnDeploymentStarting
 
