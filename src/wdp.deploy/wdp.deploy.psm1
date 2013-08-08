@@ -3,13 +3,14 @@
 		[string]$PathToPackage = $(throw '- Need path to package')
 	)
 	
+	OnDeploymentStarting	
+	
 	try {
 		EnsureWDPowerShellMode
 		
 		$primary = $cfg.DestinationPublishSettingsFiles | Select-Object -First 1
 		$restoreParams = BuildRestoreParameters $PathToPackage $primary
 		
-		OnDeploymentStarting
 		$restore = Restore-WDPackage @restoreParams -ErrorAction:Stop
 		
 		$restore | Out-String
@@ -19,13 +20,14 @@
 			$sync = Sync-WDApp @syncParams -ErrorAction:Stop
 			
 			$sync | Out-String
-		}
-		OnDeploymentFinished
+		}		
 			
 	} catch {
 		Write-Error $_.Exception
 		exit 1
-	}	
+	}
+	
+	OnDeploymentFinished
 
 }
 
@@ -145,7 +147,6 @@ function EnsureWDPowerShellMode {
 	}
 }
 
-#$Env:TEAMCITY_DATA_PATH
 # default values
 # override by Set-Properties @{Key=Value} outside of this script
 $cfg = @{
@@ -157,12 +158,12 @@ $cfg = @{
 	ReportProgress = $true
 	Messages = @{
 		DeploymentStarting = if($Env:TEAMCITY_DATA_PATH){
-			"##teamcity[progressStart 'deployment in progress...']"
+			"##teamcity[progressStart 'deploying']"
 		} else {
 			"deployment in progress..."
 		}
 		DeploymentFinished = if($Env:TEAMCITY_DATA_PATH){
-			"##teamcity[progressFinish 'deployment in progress...']"
+			"##teamcity[progressFinish 'deploying']"
 		} else {
 			"deployment finished successfully"
 		}
