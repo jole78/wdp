@@ -176,8 +176,8 @@ $cfg = @{
 # If we execute in TeamCity
 if ($env:TEAMCITY_VERSION) {
 	$host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(8192,50)
-	$cfg.Messages.DeploymentStarting = "##teamcity[progressStart 'Deploying']"
-	$cfg.Messages.DeploymentFinished = "##teamcity[progressFinish 'Deploying']"
+	$cfg.Messages.DeploymentStarting = "##teamcity[progressMessage 'Deployment started']"
+	$cfg.Messages.DeploymentFinished = "##teamcity[progressMessage 'Deployment finished']"
 }
 
 Export-ModuleMember -Function Invoke-Deploy, Set-Properties
