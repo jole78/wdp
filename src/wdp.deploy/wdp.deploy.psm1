@@ -2,10 +2,12 @@
 	param(
 		[string]$PathToPackage = $(throw '- Need path to package')
 	)		
-	OnDeploymentStarting
+		
 	try {	
 		
 		EnsureWDPowerShellMode
+		
+		Log $cfg.Messages.DeploymentStarting
 		
 		$primary = $cfg.DestinationPublishSettingsFiles | Select-Object -First 1
 		Deploy $PathToPackage $primary
@@ -19,7 +21,7 @@
 			}
 		}
 		
-		OnDeploymentFinished
+		Log $cfg.Messages.DeploymentFinished
 			
 	} catch {
 		Write-Error $_.Exception
@@ -42,26 +44,23 @@ function Set-Properties {
 }
 
 function Deploy($package, $dest) {
+	
+	Log "=== Restore-WDPackage ==="
 	$params = BuildRestoreParameters $package $dest		
 	$out = Restore-WDPackage @params -ErrorAction:Stop		
-	$out | Out-Null	
+	$out | Out-String
 }
 
 function Sync($from, $to) {
+	Log "=== Sync-WDApp ==="
 	$params = BuildSyncParameters $from $to
 	$out = Sync-WDApp @params -ErrorAction:Stop			
-	$out | Out-Null
+	$out | Out-String
 }
 
-function OnDeploymentStarting{
- 	if($cfg.ShowProgress) {
-		Write-Output $cfg.Messages.DeploymentStarting
-	}
-}
-
-function OnDeploymentFinished {
+function Log([string]$message) {
 	if($cfg.ShowProgress) {
-		Write-Output $cfg.Messages.DeploymentFinished
+		Write-Output $message
 	}
 }
 
@@ -70,6 +69,7 @@ function BuildSyncParameters{
 		[string]$from,
 		[string]$to
 	)
+	Log "Building Sync Parameters"
 	
 	$parameters = @{}
 	
@@ -98,6 +98,8 @@ function BuildRestoreParameters {
 		[string]$package,
 		[string]$destinationPublishSettings
 	)
+	
+	Log "Building Restore Parameters"
 	
 	$parameters = @{}
 	
