@@ -4,24 +4,58 @@
 	try {
 		EnsureWDPowerShellMode
 		
-		Write-Host " - Executing a content backup"
+		Log $cfg.Messages.Begin
 		
-		foreach($file in $cfg.SourcePublishSettingsFiles) {
+		#TODO: $site is not handled right now without a file
 		
-			$parameters = BuildParameters $site $file
-			WriteInfoMessage $parameters	
+		if($cfg.SourcePublishSettingsFiles){
 			
-			$backup = Backup-WDApp @parameters -ErrorAction:Stop
-			
-			PublishArtifacts $backup.Package
-			$backup | Out-String
-		}	
+		} else {
+			Backup $site
+		}
+		
+		foreach($file in $cfg.SourcePublishSettingsFiles) {			
+			Backup $site $file
+		}
+		
+		Log $cfg.Messages.End
 			
 	} catch {
 		Write-Error $_.Exception
 		exit 1
 	}	
 
+}
+
+function Set-Properties {
+	param(
+		[HashTable]$properties
+	)
+
+	foreach ($key in $properties.keys) {
+		
+		$value = $properties.$key		
+		$cfg[$key] = $value
+		Log " - Property '$key' updated with value '$value'"
+    }
+}
+
+function Backup($application, $source) {
+	Log "=== Backup-WDApp ==="
+	
+	$params = BuildParameters $application $source
+			# TODO: fix
+			#WriteInfoMessage $parameters
+			
+	$out = Backup-WDApp @params -ErrorAction:Stop
+	PublishArtifacts $out.Package
+	$out | Out-String
+}
+
+function Log([string]$message) {
+	if($cfg.Verbose) {
+		Write-Host $message
+	}
 }
 
 function WriteInfoMessage($parameters){
@@ -47,16 +81,6 @@ function WriteInfoMessage($parameters){
 			Write-Host "   - on '$($publishsettings.PublishUrl)'"
 		}
 	}
-}
-
-function Set-Properties {
-	param(
-		[HashTable]$properties
-	)
-
-	foreach ($key in $properties.keys) {
-		$cfg[$key] = $properties.$key
-    }
 }
 
 function PublishArtifacts([string] $path) {
@@ -129,12 +153,25 @@ function BuildParameters {
 # default values
 # override by Set-Properties @{Key=Value} outside of this script
 $cfg = @{
-	SourcePublishSettingsFiles = @($null) # empty implies local backup
-	BackupLocation = (Get-Location).Path + "\Backups" # .\Backups
-	PublishArtifacts = if($Env:TEAMCITY_DATA_PATH){$true} else {$false}
+	SourcePublishSettingsFiles = @($null)
+	BackupLocation = (Get-Location).Path + "\Backups"
+	PublishArtifacts = $false
 	ProviderSettings = $null
 	SkipFolderList = $null
 	SkipFileList = $null
+	Verbose = $true
+	Messages = @{
+		Begin = "backup started..."
+		End = "backup finished successfully"
+	}
+}
+
+# If we execute in TeamCity
+if ($env:TEAMCITY_VERSION) {
+	$host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(8192,50)
+	$cfg.PublishArtifacts = $true
+	$cfg.Messages.Begin = "##teamcity[blockOpened name='WDP: Backup']"
+	$cfg.Messages.End = "##teamcity[blockClosed name='WDP: Backup']"
 }
 
 Export-ModuleMember -Function Invoke-Backup, Set-Properties
