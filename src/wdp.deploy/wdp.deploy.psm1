@@ -7,7 +7,7 @@
 		
 		EnsureWDPowerShellMode
 		
-		Log $cfg.Messages.DeploymentStarting
+		Log $cfg.Messages.Begin
 		
 		$primary = $cfg.DestinationPublishSettingsFiles | Select-Object -First 1
 		Deploy $PathToPackage $primary
@@ -21,7 +21,7 @@
 			}
 		}
 		
-		Log $cfg.Messages.DeploymentFinished
+		Log $cfg.Messages.End
 			
 	} catch {
 		Write-Error $_.Exception
@@ -37,9 +37,9 @@ function Set-Properties {
 
 	foreach ($key in $properties.keys) {
 		
-		$value = $properties.$key
-		Write-Host "Property '$key' updated with value '$value'"
+		$value = $properties.$key		
 		$cfg[$key] = $value
+		Log " - Property '$key' updated with value '$value'"
     }
 }
 
@@ -59,7 +59,7 @@ function Sync($from, $to) {
 }
 
 function Log([string]$message) {
-	if($cfg.ShowProgress) {
+	if($cfg.Verbose) {
 		Write-Host $message
 	}
 }
@@ -164,18 +164,18 @@ $cfg = @{
 	SkipFileList = $null
 	ParametersFile = $null
 	UseSync = $true
-	ShowProgress = $true
+	Verbose = $true
 	Messages = @{
-		DeploymentStarting = "deployment started..."
-		DeploymentFinished = "deployment finished successfully"
+		Begin = "deployment started..."
+		End = "deployment finished successfully"
 	}
 }
 
 # If we execute in TeamCity
 if ($env:TEAMCITY_VERSION) {
 	$host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(8192,50)
-	$cfg.Messages.DeploymentStarting = "##teamcity[blockOpened name='Deploying']"
-	$cfg.Messages.DeploymentFinished = "##teamcity[blockClosed name='Deploying']"
+	$cfg.Messages.Begin = "##teamcity[blockOpened name='WDP: Deploy']"
+	$cfg.Messages.End = "##teamcity[blockClosed name='WDP: Deploy']"
 }
 
 Export-ModuleMember -Function Invoke-Deploy, Set-Properties
