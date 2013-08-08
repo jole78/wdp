@@ -56,13 +56,13 @@ function Sync($from, $to) {
 
 function OnDeploymentStarting{
  	if($cfg.ShowProgress) {
-		Write-Host $cfg.Messages.DeploymentStarting
+		Write-Output $cfg.Messages.DeploymentStarting
 	}
 }
 
 function OnDeploymentFinished {
 	if($cfg.ShowProgress) {
-		Write-Host $cfg.Messages.DeploymentFinished
+		Write-Output $cfg.Messages.DeploymentFinished
 	}
 }
 
@@ -168,17 +168,16 @@ $cfg = @{
 	UseSync = $true
 	ShowProgress = $true
 	Messages = @{
-		DeploymentStarting = if($Env:TEAMCITY_DATA_PATH){
-			"##teamcity[progressStart 'Deploying']"
-		} else {
-			"deployment in progress..."
-		}
-		DeploymentFinished = if($Env:TEAMCITY_DATA_PATH){
-			"##teamcity[progressFinish 'Deploying']"
-		} else {
-			"deployment finished successfully"
-		}
+		DeploymentStarting = "deployment started..."
+		DeploymentFinished = "deployment finished successfully"
 	}
+}
+
+# If we execute in TeamCity
+if ($env:TEAMCITY_VERSION) {
+	$host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(8192,50)
+	$cfg.Messages.DeploymentStarting = "##teamcity[progressStart 'Deploying']"
+	$cfg.Messages.DeploymentFinished = "##teamcity[progressFinish 'Deploying']"
 }
 
 Export-ModuleMember -Function Invoke-Deploy, Set-Properties
