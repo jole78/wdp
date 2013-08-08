@@ -2,7 +2,7 @@
 	param(
 		[string]$PathToPackage = $(throw '- Need path to package')
 	)		
-	
+	OnDeploymentStarting
 	try {	
 		
 		EnsureWDPowerShellMode
@@ -175,11 +175,10 @@ $cfg = @{
 # If we execute in TeamCity
 if ($env:TEAMCITY_VERSION) {
 	$host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(8192,50)
-	$cfg.Messages.DeploymentStarting = "##teamcity[progressMessage 'Deployment started']"
-	$cfg.Messages.DeploymentFinished = "##teamcity[progressMessage 'Deployment finished']"
+	$cfg.Messages.DeploymentStarting = "##teamcity[blockOpened name='Deploying']"
+	$cfg.Messages.DeploymentFinished = "##teamcity[blockClosed name='Deploying']"
 }
 
 Export-ModuleMember -Function Invoke-Deploy, Set-Properties
 
-OnDeploymentStarting
 
