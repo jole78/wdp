@@ -19,7 +19,7 @@
 		}
 		
 		Log $cfg.Messages.End
-			
+		
 	} catch {
 		throw $_.Exception
 	}	

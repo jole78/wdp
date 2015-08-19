@@ -24,8 +24,7 @@
 		Log $cfg.Messages.End
 			
 	} catch {
-		Write-Error $_.Exception
-		exit 1
+		throw $_.Exception
 	}	
 
 }
