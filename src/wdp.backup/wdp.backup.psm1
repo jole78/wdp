@@ -19,10 +19,14 @@
 		}
 		
 		Log $cfg.Messages.End
-			
+		
 	} catch {
-		Write-Error $_.Exception
-		exit 1
+		if($cfg.UseThrowLogic) {
+		    throw $_.Exception
+        } else {
+        	Write-Error $_.Exception
+		    exit 1
+        }
 	}	
 
 }
@@ -135,7 +139,7 @@ function BuildParameters {
 	if($cfg.ProviderSettings) {
 		$parameters.SourceSettings = $cfg.ProviderSettings
 	}
-	
+
 	if($cfg.SkipFolderList) {
 		$parameters.SkipFolderList = @($cfg.SkipFolderList)
 	}
@@ -158,6 +162,7 @@ $cfg = @{
 	PublishArtifacts = $false
 	ProviderSettings = $null
 	SkipFolderList = $null
+    UseThrowLogic = $false
 	SkipFileList = $null
 	Verbose = $true
 	Messages = @{
