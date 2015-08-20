@@ -24,7 +24,12 @@
 		Log $cfg.Messages.End
 			
 	} catch {
-		throw $_.Exception
+        if($cfg.UseThrowLogic -eq "True") {
+		    throw $_.Exception
+        } else {
+        	Write-Error $_.Exception
+		    exit 1
+        }
 	}	
 
 }
@@ -164,6 +169,7 @@ $cfg = @{
 	ParametersFile = $null
 	UseSync = $true
 	Verbose = $true
+    UseThrowLogic = $false
 	Messages = @{
 		Begin = "deployment started..."
 		End = "deployment finished successfully"
